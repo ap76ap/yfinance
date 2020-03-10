@@ -282,14 +282,22 @@ class TickerBase():
         # holders
         url = "{}/{}/holders".format(self._scrape_url, self.ticker)
         holders = _pd.read_html(url)
-        self._major_holders = holders[0]
-        self._institutional_holders = holders[1]
-        if 'Date Reported' in self._institutional_holders:
-            self._institutional_holders['Date Reported'] = _pd.to_datetime(
-                self._institutional_holders['Date Reported'])
-        if '% Out' in self._institutional_holders:
-            self._institutional_holders['% Out'] = self._institutional_holders[
-                '% Out'].str.replace('%', '').astype(float)/100
+
+        # Holders not available for all instruments
+        # Check to make sure we have as expected for current instrument
+        # Major holders is 2 columns. Should be first table in page
+        if holders and len(holders) > 0 and len(holders[0].columns) == 2:
+            self._major_holders = holders[0]
+
+        # Institutional Holders is 5 columns. Should be second table in page
+        if holders and len(holders) > 1 and len(holders[1].columns) == 5:
+            self._institutional_holders = holders[1]
+            if 'Date Reported' in self._institutional_holders:
+                self._institutional_holders['Date Reported'] = _pd.to_datetime(
+                    self._institutional_holders['Date Reported'])
+            if '% Out' in self._institutional_holders:
+                self._institutional_holders['% Out'] = self._institutional_holders[
+                    '% Out'].str.replace('%', '').astype(float)/100
 
         # sustainability
         d = {}
